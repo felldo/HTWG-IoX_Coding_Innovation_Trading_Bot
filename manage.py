@@ -32,21 +32,19 @@ if __name__ == '__main__':
 
 
 
-
-
 #https://python-binance.readthedocs.io/en/latest/overview.html
 #https://binance-docs.github.io/apidocs/#change-log
 
-from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
-client = Client("key", "secret")
+###from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
+###client = Client("key", "secret")
 
 # get market depth
-depth = client.get_order_book(symbol='BNBBTC')
+###depth = client.get_order_book(symbol='BNBBTC')
 
-print(client.get_symbol_info("BTCBUSD"))
+###print(client.get_symbol_info("BTCBUSD"))
 
-print(client.get_symbol_ticker(symbol='BTCBUSD'))
-print(client.get_symbol_ticker(symbol='DOGEBUSD'))
+###print(client.get_symbol_ticker(symbol='BTCBUSD'))
+###print(client.get_symbol_ticker(symbol='DOGEBUSD'))
 
 #for x in client.get_all_tickers():
 #    print(x)
@@ -95,37 +93,41 @@ print(client.get_symbol_ticker(symbol='DOGEBUSD'))
 #klines = client.get_historical_klines("NEOBTC", Client.KLINE_INTERVAL_1WEEK, "1 Jan, 2017")
 #print(klines)
 
+
+
+
+
 # socket manager using threads
-twm = ThreadedWebsocketManager()
-twm.start()
+###twm = ThreadedWebsocketManager()
+###twm.start()
 
 # depth cache manager using threads
-dcm = ThreadedDepthCacheManager()
-dcm.start()
+###dcm = ThreadedDepthCacheManager()
+###dcm.start()
 
-def handle_socket_message(msg):
-    print(f"message type: {msg['e']}")
-    print(msg)
+###def handle_socket_message(msg):
+    ###print(f"message type: {msg['e']}")
+    ###    print(msg)
 
-def handle_dcm_message(depth_cache):
-    print(f"symbol {depth_cache.symbol}")
-    print("top 5 bids")
-    print(depth_cache.get_bids()[:5])
-    print("top 5 asks")
-    print(depth_cache.get_asks()[:5])
-    print("last update time {}".format(depth_cache.update_time))
+###def handle_dcm_message(depth_cache):
+    ###print(f"symbol {depth_cache.symbol}")
+    ###print("top 5 bids")
+    ###print(depth_cache.get_bids()[:5])
+    ###print("top 5 asks")
+    ###print(depth_cache.get_asks()[:5])
+    ###    print("last update time {}".format(depth_cache.update_time))
 
-twm.start_kline_socket(callback=handle_socket_message, symbol='BNBBTC')
+###twm.start_kline_socket(callback=handle_socket_message, symbol='BNBBTC')
 
-dcm.start_depth_cache(callback=handle_dcm_message, symbol='ETHBTC')
+###dcm.start_depth_cache(callback=handle_dcm_message, symbol='ETHBTC')
 
 # replace with a current options symbol
-options_symbol = 'BTC-210430-36000-C'
-dcm.start_options_depth_cache(callback=handle_dcm_message, symbol=options_symbol)
+###options_symbol = 'BTC-210430-36000-C'
+###dcm.start_options_depth_cache(callback=handle_dcm_message, symbol=options_symbol)
 
 # join the threaded managers to the main thread
-twm.join()
-dcm.join()
+###twm.join()
+###dcm.join()
 
 
 
