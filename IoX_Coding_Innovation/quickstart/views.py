@@ -11,7 +11,9 @@ from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 import json
 import os
 
-client = Client(os.environ['BINANCE_API_KEY'], os.environ['BINANCE_SECRET'])
+client = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BINANCE_SECRET'], testnet=False)
+print(client.get_all_tickers())
+print(client.get_my_trades(symbol="BTCBUSD"))
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -33,18 +35,17 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['GET'])
-def hello_world(request: rest_framework.request.Request):
+def get_all_coins(request: rest_framework.request.Request):
     print(request.user)
     print(request.query_params)
-    print(request.query_params['id'])
-    # data = {}
-    # list = [1, 2, 3, 4]
-    # data['x'] = "test"
-    # data['y'] = list
-    # print(json.dumps(data))
-    data = client.get_symbol_ticker(symbol=request.query_params['id'])
+    data = client.get_symbol_ticker(symbol=request.query_params['name'])
     return Response(data=data, content_type="application/json")
-    # return Response({"message": "Hello, world!"})
+
+
+@api_view(['GET'])
+def get_coin_info(request: rest_framework.request.Request):
+    data = client.get_symbol_info(symbol=request.query_params['name'])
+    return Response(data=data, content_type="application/json")
 
 
 @api_view(['GET'])
