@@ -11,7 +11,7 @@ from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 import json
 import os
 
-client = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BINANCE_SECRET'], testnet=False)
+client = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BINANCE_SECRET'], testnet=True)
 print(client.get_all_tickers())
 print(client.get_my_trades(symbol="BTCBUSD"))
 
@@ -51,6 +51,12 @@ def get_symbol_ticker(request: rest_framework.request.Request):
 @api_view(['GET'])
 def get_symbol_info(request: rest_framework.request.Request):
     data = client.get_symbol_info(symbol=request.query_params['name'])
+    return Response(data=data, content_type="application/json")
+
+
+@api_view(['GET'])
+def get_account_info(request: rest_framework.request.Request) -> Response:
+    data = client.get_account()
     return Response(data=data, content_type="application/json")
 
 

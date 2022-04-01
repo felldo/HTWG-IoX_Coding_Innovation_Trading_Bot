@@ -21,7 +21,7 @@ from IoX_Coding_Innovation.quickstart import views
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
-#router.register(r'binance', views.snippet_detail)
+# router.register(r'binance', views.snippet_detail)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -30,13 +30,13 @@ urlpatterns = [
     path('binance/tickers/', views.get_all_tickers),
     path('binance/ticker/', views.get_symbol_ticker),
     path('binance/symbol/', views.get_symbol_info),
+    path('binance/account/', views.get_account_info),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
 
+# from django.contrib import admin
+# from django.urls import path
 
-#from django.contrib import admin
-#from django.urls import path
-
-#urlpatterns = [
+# urlpatterns = [
 #    path('admin/', admin.site.urls),
-#]
+# ]
