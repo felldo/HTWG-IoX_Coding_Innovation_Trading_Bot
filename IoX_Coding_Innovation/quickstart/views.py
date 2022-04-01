@@ -1,4 +1,5 @@
 # Create your views here.
+import rest_framework.request
 from django.contrib.auth.models import User, Group
 # from requests import Response
 from rest_framework import viewsets
@@ -6,7 +7,11 @@ from rest_framework import permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from IoX_Coding_Innovation.quickstart.serializers import UserSerializer, GroupSerializer
+from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 import json
+import os
+
+client = Client(os.environ['BINANCE_API_KEY'], os.environ['BINANCE_SECRET'])
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -28,13 +33,16 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['GET'])
-def hello_world(request):
-    data = {}
-    list = [1, 2, 3, 4]
-    data['x'] = "test"
-    data['y'] = list
-    print(json.dumps(data))
-
+def hello_world(request: rest_framework.request.Request):
+    print(request.user)
+    print(request.query_params)
+    print(request.query_params['id'])
+    # data = {}
+    # list = [1, 2, 3, 4]
+    # data['x'] = "test"
+    # data['y'] = list
+    # print(json.dumps(data))
+    data = client.get_symbol_ticker(symbol=request.query_params['id'])
     return Response(data=data, content_type="application/json")
     # return Response({"message": "Hello, world!"})
 
