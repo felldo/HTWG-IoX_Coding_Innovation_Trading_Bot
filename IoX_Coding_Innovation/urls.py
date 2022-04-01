@@ -27,7 +27,9 @@ router.register(r'groups', views.GroupViewSet)
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('', include(router.urls)),
-    path('binance/', views.get_all_coins),
+    path('binance/tickers/', views.get_all_tickers),
+    path('binance/ticker/', views.get_symbol_ticker),
+    path('binance/symbol/', views.get_symbol_info),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
 

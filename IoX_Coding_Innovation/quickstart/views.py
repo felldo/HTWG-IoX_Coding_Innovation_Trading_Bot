@@ -35,7 +35,13 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['GET'])
-def get_all_coins(request: rest_framework.request.Request):
+def get_all_tickers(request: rest_framework.request.Request):
+    data = client.get_all_tickers()
+    return Response(data=data, content_type="application/json")
+
+
+@api_view(['GET'])
+def get_symbol_ticker(request: rest_framework.request.Request):
     print(request.user)
     print(request.query_params)
     data = client.get_symbol_ticker(symbol=request.query_params['name'])
@@ -43,7 +49,7 @@ def get_all_coins(request: rest_framework.request.Request):
 
 
 @api_view(['GET'])
-def get_coin_info(request: rest_framework.request.Request):
+def get_symbol_info(request: rest_framework.request.Request):
     data = client.get_symbol_info(symbol=request.query_params['name'])
     return Response(data=data, content_type="application/json")
 
