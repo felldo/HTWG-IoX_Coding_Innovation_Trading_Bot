@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'dashboard',
-    'trading_bot'
+    'trading_bot',
     'corsheaders'
 ]
 
