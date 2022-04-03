@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class QuickstartConfig(AppConfig):
+class TradingBotConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'IoX_Coding_Innovation.quickstart'
+    name = 'trading_bot'

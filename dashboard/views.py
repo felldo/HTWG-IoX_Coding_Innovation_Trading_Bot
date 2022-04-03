@@ -1,22 +1,17 @@
-# Create your views here.
-import rest_framework.request
-from django.contrib.auth.models import User, Group
-# from requests import Response
-from rest_framework import viewsets
-from rest_framework import permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from IoX_Coding_Innovation.quickstart.serializers import UserSerializer, GroupSerializer
-from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
-import json
+from binance import Client
+import rest_framework.request
 import os
 
-client = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BINANCE_SECRET'], testnet=True)
+client = Client(api_key=os.environ['BINANCE_API_KEY'],
+                api_secret=os.environ['BINANCE_SECRET'], testnet=True)
 print(client.get_all_tickers())
 print(client.get_my_trades(symbol="BTCBUSD"))
 
 print(client.get_symbol_ticker(symbol="BTCBUSD"))
-klinesData = client.get_historical_klines("BTCBUSD", Client.KLINE_INTERVAL_1MINUTE, "2 minutes ago UTC")
+klinesData = client.get_historical_klines(
+    "BTCBUSD", Client.KLINE_INTERVAL_1MINUTE, "2 minutes ago UTC")
 print(klinesData)
 
 """
@@ -40,30 +35,15 @@ KLINES DATEN
 """
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
 @api_view(['GET'])
 def get_klines_data(request: rest_framework.request.Request):
-    data = client.get_historical_klines(request.query_params['name'], Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
+    data = client.get_historical_klines(
+        request.query_params['name'], Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
 
     goodKlinesData = []
     for kline in data:
-        manipulatedKline = [kline[0], float(kline[1]), float(kline[2]), float(kline[3]), float(kline[4])]
+        manipulatedKline = [kline[0], float(kline[1]), float(
+            kline[2]), float(kline[3]), float(kline[4])]
         goodKlinesData.append(manipulatedKline)
     return Response(data=goodKlinesData, content_type="application/json")
 
@@ -92,14 +72,3 @@ def get_symbol_info(request: rest_framework.request.Request):
 def get_account_info(request: rest_framework.request.Request) -> Response:
     data = client.get_account()
     return Response(data=data, content_type="application/json")
-
-
-@api_view(['GET'])
-def snippet_detail(request, pk):
-    # def snippet_detail(request, pk):
-    """
-    Retrieve, update or delete a code snippet.
-    """
-    print(request.body)
-
-    return Response("")
