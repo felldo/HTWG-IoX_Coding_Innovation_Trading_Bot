@@ -43,7 +43,7 @@ def get_klines_data(request: rest_framework.request.Request):
     goodKlinesData = []
     for kline in data:
         manipulatedKline = [kline[0], float(kline[1]), float(
-            kline[2]), float(kline[3]), float(kline[4])]
+            kline[2]), float(kline[3]), float(kline[4]), float(kline[5])]
         goodKlinesData.append(manipulatedKline)
     return Response(data=goodKlinesData, content_type="application/json")
 
