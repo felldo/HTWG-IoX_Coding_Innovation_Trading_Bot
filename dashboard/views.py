@@ -5,7 +5,7 @@ import rest_framework.request
 import os
 
 client = Client(api_key=os.environ['BINANCE_API_KEY'],
-                api_secret=os.environ['BINANCE_SECRET'], testnet=True)
+                api_secret=os.environ['BINANCE_SECRET'], testnet=False)
 print(client.get_all_tickers())
 print(client.get_my_trades(symbol="BTCBUSD"))
 
@@ -34,6 +34,35 @@ KLINES DATEN
 ]
 """
 
+
+@api_view(['GET', 'POST'])
+def get_bot_is_trading(request: rest_framework.request.Request):
+    #
+    # TODO: Change trading state and return something useful
+    #
+
+    if request.method == 'POST':
+        print("CHANGE TRADING STATE")
+    elif request.method == 'GET':
+        print("GET BOT IS TRADING")
+    data = {"trading": True}
+    return Response(data=data, content_type="application/json")
+
+
+@api_view(['GET'])
+def get_overview(request: rest_framework.request.Request):
+    #
+    # TODO: Implement this method correctly
+    #
+    data = {}
+    data["startBalance"] = 100000
+    data["currentBalance"] = 100000
+    data["uptime"] = 999
+
+    return Response(data=data, content_type="application/json")
+
+
+### BINANCE API
 
 @api_view(['GET'])
 def get_klines_data(request: rest_framework.request.Request):
