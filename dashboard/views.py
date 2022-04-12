@@ -3,9 +3,39 @@ from rest_framework.response import Response
 from binance import Client
 import rest_framework.request
 import os
+import datetime
+
+# ----------------#----------------#----------------#----------------#----------------#----------------
+# MONGO DB
+# ----------------#----------------#----------------#----------------#----------------#----------------
+from pymongo import MongoClient
+# pprint library is used to make the output look more pretty
+import pprint
+# connect to MongoDB, change the << MONGODB URL >> to reflect your own connection string
+import urllib.parse
+
+client = MongoClient('168.119.85.173:2379',
+                     username='tb',
+                     password=os.environ['MONGO_DB_PASSWORD'],
+                     authSource='trading_bot',
+                     authMechanism='SCRAM-SHA-256')
+
+db = client.trading_bot
+# Issue the serverStatus command and print the results
+collection = db.test
+# collection.insert_one({"hi":"jo"})
+
+# for a in collection.find():
+#    pprint.pprint(a)
+
+# ----------------#----------------#----------------#----------------#----------------#----------------
+
+isTrading = False  # Variable ob bot tradet oder nicht
+startTime = datetime.datetime.now()  # runtime von bot
+coinsToTrade = []
 
 client = Client(api_key=os.environ['BINANCE_API_KEY'],
-                api_secret=os.environ['BINANCE_SECRET'], testnet=False)
+                api_secret=os.environ['BINANCE_SECRET'], testnet=True)
 print(client.get_all_tickers())
 print(client.get_my_trades(symbol="BTCBUSD"))
 
@@ -35,6 +65,13 @@ KLINES DATEN
 """
 
 
+def changeTradingState(tradingState: bool, coinNames):
+    isTrading = tradingState
+    coinsToTrade = coinNames
+    print("CHANGE TRADING STATE: " + isTrading)
+    print(coinNames)
+
+
 @api_view(['GET', 'POST'])
 def get_bot_is_trading(request: rest_framework.request.Request):
     #
@@ -42,10 +79,11 @@ def get_bot_is_trading(request: rest_framework.request.Request):
     #
 
     if request.method == 'POST':
-        print("CHANGE TRADING STATE")
+        changeTradingState(request.POST.get('tradingState'), request.POST.getlist('trading[]'))
     elif request.method == 'GET':
         print("GET BOT IS TRADING")
-    data = {"trading": True}
+
+    data = {"trading": isTrading}
     return Response(data=data, content_type="application/json")
 
 
@@ -57,7 +95,7 @@ def get_overview(request: rest_framework.request.Request):
     data = {}
     data["startBalance"] = 100000
     data["currentBalance"] = 100000
-    data["uptime"] = 999
+    data["uptime"] = str(datetime.datetime.now() - startTime).split(".")[0]
 
     return Response(data=data, content_type="application/json")
 
