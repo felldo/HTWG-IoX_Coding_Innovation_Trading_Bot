@@ -9,6 +9,7 @@ python-binance = "*"
 djangorestframework = "*"
 django-cors-headers = "*"
 pymongo = "*"
+numpy = "*"
 
 [dev-packages]
 

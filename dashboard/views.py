@@ -4,15 +4,18 @@ from binance import Client
 import rest_framework.request
 import os
 import datetime
+import asyncio
+import trading_bot.TradingBotWebsocket as tbsocket
+from trading_bot.strategies.strategy1 import BollingerBand
+import trading_bot.strategies.StrategyReturnType as stratType
 
+print("------------------------------------------------------------------------0")
+# tbsocket.start()
+print("------------------------------------------------------------------------1")
 # ----------------#----------------#----------------#----------------#----------------#----------------
 # MONGO DB
 # ----------------#----------------#----------------#----------------#----------------#----------------
 from pymongo import MongoClient
-# pprint library is used to make the output look more pretty
-import pprint
-# connect to MongoDB, change the << MONGODB URL >> to reflect your own connection string
-import urllib.parse
 
 client = MongoClient('168.119.85.173:2379',
                      username='tb',
@@ -35,14 +38,61 @@ startTime = datetime.datetime.now()  # runtime von bot
 coinsToTrade = []
 
 client = Client(api_key=os.environ['BINANCE_API_KEY'],
-                api_secret=os.environ['BINANCE_SECRET'], testnet=True)
-print(client.get_all_tickers())
-print(client.get_my_trades(symbol="BTCBUSD"))
+                api_secret=os.environ['BINANCE_SECRET'], testnet=False)
+# print(client.get_all_tickers())
+# print(client.get_my_trades(symbol="BTCBUSD"))
 
-print(client.get_symbol_ticker(symbol="BTCBUSD"))
-klinesData = client.get_historical_klines(
-    "BTCBUSD", Client.KLINE_INTERVAL_1MINUTE, "2 minutes ago UTC")
-print(klinesData)
+# print(client.get_symbol_ticker(symbol="BTCBUSD"))
+klinesData = client.get_historical_klines("ETHBUSD", Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
+
+#print(klinesData)
+strat = BollingerBand()
+print("-+-++-+--+-+-+-+-+-+-+-+--")
+#print(len(klinesData))
+cash = 200_000
+coins = 0
+current_price = 0
+
+stop_loss = 0.0
+
+has_bought = False
+
+last_buy_price = 0
+
+for x in klinesData:
+    close_price = float(x[4])
+    current_price = close_price
+
+    action = strat.trade(x[0], float(x[1]), close_price)
+
+    if action == stratType.StrategyReturnType.BUY and not has_bought:
+        #print("Bought")
+        has_bought = True
+        cash = cash - close_price
+        coins += 1
+        last_buy_price = close_price
+
+    # sell if (strat tells to sell and you have bought and current_price > x) or the coin has dropped by 2 percent from the last buy price (last buy price * 0.98 > current_price)
+    elif (action == stratType.StrategyReturnType.SELL and has_bought and current_price > last_buy_price) or (has_bought and (last_buy_price * 0.98) > current_price):
+        #print("Sold")
+        if has_bought and (last_buy_price * 0.98) > current_price:
+            print("SOLD BECAUSE OF STOP LOSS")
+
+        has_bought = False
+        cash = cash + close_price
+        coins -= 1
+
+
+print("--------------------------------------------------------------------------------------------------------")
+print("PORSCHE CAYMAN S JUNGS KOMMT IN DIE GRUPPE: ", cash)
+print("coins worth: ", coins* last_buy_price)
+print("Minus gemacht ??? :", cash + coins * current_price - 200000)
+
+
+print("-+-++-+--+-+-+-+-+-+-+-+--")
+print("-+-++-+--+-+-+-+-+-+-+-+--")
+print("-+-++-+--+-+-+-+-+-+-+-+--")
+print("-+-++-+--+-+-+-+-+-+-+-+--")
 
 """
 KLINES DATEN
@@ -68,7 +118,7 @@ KLINES DATEN
 def changeTradingState(tradingState: bool, coinNames):
     isTrading = tradingState
     coinsToTrade = coinNames
-    print("CHANGE TRADING STATE: " + isTrading)
+    print("CHANGE TRADING STATE: " + str(isTrading))
     print(coinNames)
 
 
@@ -105,7 +155,7 @@ def get_overview(request: rest_framework.request.Request):
 @api_view(['GET'])
 def get_klines_data(request: rest_framework.request.Request):
     data = client.get_historical_klines(
-        request.query_params['name'], Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
+        request.query_params['name'], Client.KLINE_INTERVAL_30MINUTE, "1 days ago UTC")
 
     goodKlinesData = []
     for kline in data:
