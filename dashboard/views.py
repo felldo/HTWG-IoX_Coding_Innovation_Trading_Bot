@@ -17,7 +17,7 @@ print("------------------------------------------------------------------------1
 # ----------------#----------------#----------------#----------------#----------------#----------------
 from pymongo import MongoClient
 
-client = MongoClient('168.119.85.173:2379',
+client = MongoClient('better-tickets.de:2379',
                      username='tb',
                      password=os.environ['MONGO_DB_PASSWORD'],
                      authSource='trading_bot',
@@ -43,14 +43,14 @@ client = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BI
 # print(client.get_my_trades(symbol="BTCBUSD"))
 
 # print(client.get_symbol_ticker(symbol="BTCBUSD"))
-coinName = "ETHBUSD"
+coinName = "XRPBUSD"
 klinesData = client.get_historical_klines(coinName, Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
 
 # print(klinesData)
 strat = BollingerBand()
 
 
-cash = 200_000
+cash = 1000
 start_cash = cash
 coins = 0
 close_price = 0
