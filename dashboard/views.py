@@ -1,13 +1,13 @@
+from pymongo.collection import Collection
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from binance import Client
-import rest_framework.request
-import os
-import datetime
+import rest_framework.request, os, time, threading, datetime
 import asyncio
 import trading_bot.TradingBotWebsocket as tbsocket
-from trading_bot.strategies.strategy1 import BollingerBand
+from trading_bot.strategies.BollingerBand import BollingerBand
 import trading_bot.strategies.StrategyReturnType as stratType
+import _thread as thread
 
 print("------------------------------------------------------------------------0")
 # tbsocket.start()
@@ -26,6 +26,7 @@ client = MongoClient('168.119.85.173:2379',
 db = client.trading_bot
 # Issue the serverStatus command and print the results
 collection = db.test
+tradesCollection: Collection = db.trades
 # collection.insert_one({"hi":"jo"})
 
 # for a in collection.find():
@@ -37,62 +38,62 @@ isTrading = False  # Variable ob bot tradet oder nicht
 startTime = datetime.datetime.now()  # runtime von bot
 coinsToTrade = []
 
-client = Client(api_key=os.environ['BINANCE_API_KEY'],
-                api_secret=os.environ['BINANCE_SECRET'], testnet=False)
+client = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BINANCE_SECRET'], testnet=False)
 # print(client.get_all_tickers())
 # print(client.get_my_trades(symbol="BTCBUSD"))
 
 # print(client.get_symbol_ticker(symbol="BTCBUSD"))
-klinesData = client.get_historical_klines("ETHBUSD", Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
+coinName = "ETHBUSD"
+klinesData = client.get_historical_klines(coinName, Client.KLINE_INTERVAL_30MINUTE, "30 days ago UTC")
 
-#print(klinesData)
+# print(klinesData)
 strat = BollingerBand()
-print("-+-++-+--+-+-+-+-+-+-+-+--")
-#print(len(klinesData))
+
+
 cash = 200_000
+start_cash = cash
 coins = 0
-current_price = 0
+close_price = 0
 
 stop_loss = 0.0
 
-has_bought = False
-
 last_buy_price = 0
-
+"""
 for x in klinesData:
     close_price = float(x[4])
-    current_price = close_price
-
     action = strat.trade(x[0], float(x[1]), close_price)
+    if action == stratType.StrategyReturnType.BUY and coins == 0:
 
-    if action == stratType.StrategyReturnType.BUY and not has_bought:
-        #print("Bought")
-        has_bought = True
-        cash = cash - close_price
-        coins += 1
-        last_buy_price = close_price
+        # print("Bought")
+        bought_price = 0
+        while cash >= close_price:
+            cash = cash - close_price
+            coins += 1
+            last_buy_price = close_price
+        tradesCollection.insert_one({"symbol": coinName, "quantity": coins, "price": close_price, "total_price": close_price * coins, "action:": "BUY"})
 
     # sell if (strat tells to sell and you have bought and current_price > x) or the coin has dropped by 2 percent from the last buy price (last buy price * 0.98 > current_price)
-    elif (action == stratType.StrategyReturnType.SELL and has_bought and current_price > last_buy_price) or (has_bought and (last_buy_price * 0.98) > current_price):
-        #print("Sold")
-        if has_bought and (last_buy_price * 0.98) > current_price:
+    elif (action == stratType.StrategyReturnType.SELL and coins > 0 and close_price > last_buy_price) or (
+            coins > 0 and (last_buy_price * 0.98) > close_price):
+        # print("Sold")
+        if (last_buy_price * 0.98) > close_price:
             print("SOLD BECAUSE OF STOP LOSS")
-
-        has_bought = False
-        cash = cash + close_price
-        coins -= 1
-
+        tradesCollection.insert_one({"symbol": coinName, "quantity": coins, "price": close_price, "total_price": close_price * coins, "action:": "SELL"})
+        while coins != 0:
+            cash = cash + close_price
+            coins -= 1
 
 print("--------------------------------------------------------------------------------------------------------")
 print("PORSCHE CAYMAN S JUNGS KOMMT IN DIE GRUPPE: ", cash)
-print("coins worth: ", coins* last_buy_price)
-print("Minus gemacht ??? :", cash + coins * current_price - 200000)
+print("How much coins: ", coins)
+print("coins worth: ", coins * last_buy_price)
+print("EFFECTIVE TOTAL MONEY MADE:", cash + coins * close_price - start_cash)
 
-
 print("-+-++-+--+-+-+-+-+-+-+-+--")
 print("-+-++-+--+-+-+-+-+-+-+-+--")
 print("-+-++-+--+-+-+-+-+-+-+-+--")
 print("-+-++-+--+-+-+-+-+-+-+-+--")
+"""
 
 """
 KLINES DATEN
@@ -115,11 +116,40 @@ KLINES DATEN
 """
 
 
-def changeTradingState(tradingState: bool, coinNames):
-    isTrading = tradingState
-    coinsToTrade = coinNames
+def doit(stop_event, arg):
+    while not stop_event.wait(1):
+        print ("working on %s" % arg)
+    print("Stopping as you wish.")
+
+
+def main():
+    pill2kill = threading.Event()
+    t = threading.Thread(target=doit, args=(pill2kill, "task"))
+    t.start()
+    time.sleep(5)
+    pill2kill.set()
+    t.join()
+
+trading_coins_and_thread_id = {}
+
+
+
+def change_trading_state(trading_state: bool, coin_names):
+    isTrading = trading_state
     print("CHANGE TRADING STATE: " + str(isTrading))
-    print(coinNames)
+
+    pill2kill = threading.Event()
+    for coin in coin_names:
+        print("000000000")
+        if coin not in trading_coins_and_thread_id:
+            print("11111111111111")
+            tid = thread.start_new_thread(tbsocket.build_thread, (coin, pill2kill, ))
+            trading_coins_and_thread_id[coin] = pill2kill
+        else:
+            print("22222222")
+
+    #print("TID: ", tid)
+    print(coin_names)
 
 
 @api_view(['GET', 'POST'])
@@ -129,7 +159,7 @@ def get_bot_is_trading(request: rest_framework.request.Request):
     #
 
     if request.method == 'POST':
-        changeTradingState(request.POST.get('tradingState'), request.POST.getlist('trading[]'))
+        change_trading_state(request.POST.get('tradingState'), request.POST.getlist('trading[]'))
     elif request.method == 'GET':
         print("GET BOT IS TRADING")
 
