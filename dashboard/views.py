@@ -44,7 +44,7 @@ binanceClient = Client(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.envi
 
 # print(client.get_symbol_ticker(symbol="BTCBUSD"))
 coinName = "BTCBUSD"
-klinesData = binanceClient.get_historical_klines(coinName, Client.KLINE_INTERVAL_30MINUTE, "10 days ago UTC")
+klinesData = binanceClient.get_historical_klines(coinName, Client.KLINE_INTERVAL_30MINUTE, "2 days ago UTC")
 #print(klinesData)
 
 
@@ -62,14 +62,15 @@ last_buy_price = 0
 
 
 for x in klinesData:
+    close_price = float(x[4])
     action = strat_macd.trade(x[0], float(x[4]))
     if action == stratType.StrategyReturnType.BUY:
-        print("Bought")
+        #print("Bought")
         cash = cash - close_price
         coins += 1
         last_buy_price = close_price
     elif action == stratType.StrategyReturnType.SELL:
-        print("Sold")
+        #print("Sold")
         cash = cash + close_price
         coins -= 1
 

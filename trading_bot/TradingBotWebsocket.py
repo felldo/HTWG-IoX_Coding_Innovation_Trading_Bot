@@ -81,9 +81,9 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
         # print(msg)
         # print(event_time, "\t", msg)
         if algorithm == "BB":
-            check_trading_action(bb.trade(msg["k"]["t"], float(msg["k"]["o"]), float(msg["k"]["c"])), symbol, trading_bot_db)
+            check_trading_action(bb.trade(msg["k"]["t"], float(msg["k"]["o"]), float(msg["k"]["c"])), symbol, trading_bot_db, msg)
         elif algorithm == "MACD":
-            check_trading_action(macd.trade(msg["k"]["E"], float(msg["k"]["c"])), symbol, trading_bot_db)
+            check_trading_action(macd.trade(msg["k"]["E"], float(msg["k"]["c"])), symbol, trading_bot_db, msg)
             # print("Replace with function")
 
     twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
@@ -92,24 +92,65 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
     twm.join()
 
 
-def check_trading_action(trade_action: StrategyReturnType, coin_name: str, trading_bot_db: database.Database):
+def check_trading_action(trade_action: StrategyReturnType, coin_name: str, trading_bot_db: database.Database, msg):
     if trade_action == StrategyReturnType.SELL:
-        sell(coin_name, trading_bot_db)
+        sell(coin_name, trading_bot_db, msg)
     elif trade_action == StrategyReturnType.BUY:
-        buy(coin_name, trading_bot_db)
+        buy(coin_name, trading_bot_db, msg)
 
 
-def buy(coin_name: str, trading_bot_db: database.Database):
+def buy(coin_name: str, trading_bot_db: database.Database, msg):
     trades_collection: Collection = trading_bot_db.trades
+    wallet_collection: Collection = trading_bot_db.wallet
+
+    coin_wallet = wallet_collection.find_one({"SYMBOL": coin_name})
+
+    money = 0
+    if coin_wallet is None:
+        wallet_collection.insert_one({"SYMBOL": coin_name, "QUANTITY": 0, "MONEY": 100000})
+        money = 100000
+    else:
+        money = coin_wallet.get("MONEY")
+
+
     """
     trades_collection.insert_one({
-        "action":"buy",
-        "time":"",
-        "price":"",
+        "symbol": coin_name,
+        "action":"BUY",
+        "time":msg["E"],
+        "price":msg["k"]["c"],
         "quantity":"",
-        "symbol":"",
     })
     """
 
-def sell(coin_name: str, trading_bot_db: database.Database):
+
+def sell(coin_name: str, trading_bot_db: database.Database, msg):
     print()
+
+
+"""
+{
+  "e": "kline",     // Event type
+  "E": 123456789,   // Event time
+  "s": "BNBBTC",    // Symbol
+  "k": {
+    "t": 123400000, // Kline start time
+    "T": 123460000, // Kline close time
+    "s": "BNBBTC",  // Symbol
+    "i": "1m",      // Interval
+    "f": 100,       // First trade ID
+    "L": 200,       // Last trade ID
+    "o": "0.0010",  // Open price
+    "c": "0.0020",  // Close price
+    "h": "0.0025",  // High price
+    "l": "0.0015",  // Low price
+    "v": "1000",    // Base asset volume
+    "n": 100,       // Number of trades
+    "x": false,     // Is this kline closed?
+    "q": "1.0000",  // Quote asset volume
+    "V": "500",     // Taker buy base asset volume
+    "Q": "0.500",   // Taker buy quote asset volume
+    "B": "123456"   // Ignore
+  }
+}
+"""
