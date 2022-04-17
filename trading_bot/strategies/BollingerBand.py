@@ -12,7 +12,7 @@ class BollingerBand:
     # Appends Element to end of Deque until it has a length of 20
     # If length of 20, Pop the first element and append the new one to the end
     def maintan_deque(self, open_price, open_time):
-        # Wenn gleiche data["k"]["t"] dann nicht hinzufügen
+        # If same data["k"]["t"] then don't add
         if open_time > self.old_time:
             if len(self.lastTwenty) >= 20:
                 self.lastTwenty.popleft()
@@ -20,13 +20,14 @@ class BollingerBand:
             self.old_time = open_time
 
     # mean = getMeanOfDeque
-    # nstd = Wie viel die Standardabweichung aussagt
+    # nstd = Weight of Standard Deviation
     def bollinger_band(self, mean, nstd):
         std = np.std(self.lastTwenty)
         upper_band = mean + std * nstd
         lower_band = mean - std * nstd
         return upper_band, lower_band
 
+    # Implements the Bollinger_Band trading strategy
     def trade(self, open_time, open_price, closed_price):
         # Get OpenPrice
         self.maintan_deque(open_price, open_time)

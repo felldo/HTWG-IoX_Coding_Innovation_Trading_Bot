@@ -5,11 +5,12 @@ name = "pypi"
 
 [packages]
 django = "*"
-python-binance = "*"
+python-binance = "1.0.15"
 djangorestframework = "*"
 django-cors-headers = "*"
 pymongo = "*"
 numpy = "*"
+pandas = "*"
 
 [dev-packages]
 
