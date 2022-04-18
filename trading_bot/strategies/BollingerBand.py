@@ -10,7 +10,7 @@ class BollingerBand:
     lastTwenty = deque([])
     # Set old_time to 0 at the beginning
     old_time = 0
-
+    #test
     # Appends Element to end of Deque until it has a length of 20
     # If length of 20, Pop the first element and append the new one to the end
     def maintan_deque(self, open_price, open_time):
