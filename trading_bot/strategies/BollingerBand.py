@@ -6,7 +6,9 @@ from trading_bot.strategies.StrategyReturnType import *
 
 
 class BollingerBand:
+    # Empty deque to start with
     lastTwenty = deque([])
+    # Set old_time to 0 at the beginning
     old_time = 0
 
     # Appends Element to end of Deque until it has a length of 20
@@ -31,16 +33,16 @@ class BollingerBand:
     def trade(self, open_time, open_price, closed_price):
         # Get OpenPrice
         self.maintan_deque(open_price, open_time)
-
-        print(self.lastTwenty)
-
+        # print(self.lastTwenty)
         if len(self.lastTwenty) == 20:
             # Average of the last twenty calls we did
             mean = np.mean(self.lastTwenty)
-            # Get the upper and lower band of the BollingerBand Strategie
+            # Get the upper and lower band of the BollingerBand strategy
             upper_band, lower_band = self.bollinger_band(mean, 3)
             if lower_band > closed_price:
+                # Return Buy Flag
                 return StrategyReturnType.BUY
             elif upper_band < closed_price:
+                # Return Sell Flag
                 return StrategyReturnType.SELL
         return StrategyReturnType.HOLD
