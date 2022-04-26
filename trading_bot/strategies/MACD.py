@@ -76,7 +76,6 @@ class MACD:
                         # Then you set the Bought and intersection Flag to 1 and return Buy Signal for the Bot
                         self.close_price_list_pd.loc[index, 'bought/sold'] = 1
                         self.close_price_list_pd.loc[index, 'intersection'] = 1
-                        #print("Bought at {}".format(open_time))
                         return StrategyReturnType.BUY
                 # Else we are just between two intersections, so set the Flag to 2
                 else:
@@ -88,15 +87,10 @@ class MACD:
                     # Append a Sold Flag and that it is a intersection and return Sell Signal for the Bot
                     self.close_price_list_pd.loc[index, 'intersection'] = 1
                     self.close_price_list_pd.loc[index, 'bought/sold'] = 2
-                    print("Sold at {}".format(open_time))
                     return StrategyReturnType.SELL
             # After one full iteration set the current Row to the Previous_row so we can check both Rows
             # in the next iteration
             self.prev_row = row
-        #f = open("test.txt", "w")
-        #f.write(data.to_string())
-        #f.close()
-        #print(data.to_string())
         # If you can't sell or buy you just Hold
         return StrategyReturnType.HOLD
 
