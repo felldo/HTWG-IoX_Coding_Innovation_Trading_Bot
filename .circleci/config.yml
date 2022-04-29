@@ -1,0 +1,62 @@
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs:
+  docker-image:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:17-buster
+    resource_class: small
+    working_directory: ~/repo
+    steps:
+      - setup_remote_docker:
+          version: 20.10.2
+      - checkout
+      #Build Docker Image
+      - run:
+          name: Loggin in to Docker
+          command: echo "$DOCKER_ACCESS_TOKEN" | docker login --username $DOCKER_USER --password-stdin
+      - run:
+          name: Building docker image
+          command: docker build -t killelitemaste/iox-backend .
+      - run:
+          name: Publishing Docker image to registry
+          command: |
+            docker push $DOCKER_USER/iox-backend
+  deploy:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:17-buster
+    resource_class: small
+    working_directory: ~/repo
+    steps:
+      - add_ssh_keys:
+          fingerprints: [ "8c:d4:48:75:7d:32:91:96:5c:70:18:29:8d:fe:8f:92" ]
+      - run:
+          name: Exchange running docker container
+          command: >
+            ssh -o StrictHostKeyChecking=no -p222 $SSH_USER@$SSH_HOST "
+            cd /home/domme/bettertickets;
+            docker-compose pull iox-backend &&
+            docker-compose up -d --no-deps iox-backend"
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - docker-image:
+          context:
+            - Better Tickets
+          filters:
+            branches:
+              only: master # only deploy on the master branch
+      - deploy:
+          context:
+            - Better Tickets
+          requires:
+            - docker-image
+          filters:
+            branches:
+              only: master # only deploy on the master branch
