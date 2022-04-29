@@ -59,9 +59,6 @@ def change_trading_state(trading_state: bool, coin_names, interval: str, strateg
 @api_view(['GET', 'POST'])
 def get_bot_is_trading(request: rest_framework.request.Request):
     global isTrading
-    #
-    # TODO: Change trading state and return something useful
-    #
 
     if request.method == 'POST':
         change_trading_state(request.POST.get('tradingState') == "true", request.POST.getlist('trading[]'), request.POST.get('interval'),
@@ -75,13 +72,22 @@ def get_bot_is_trading(request: rest_framework.request.Request):
 
 @api_view(['GET'])
 def get_overview(request: rest_framework.request.Request):
-    #
-    # TODO: Implement this method correctly
-    #
-    data = {}
-    data["startBalance"] = 100000
-    data["currentBalance"] = 100000
-    data["uptime"] = str(datetime.datetime.now() - startTime).split(".")[0]
+    coinsWithPrice = binanceClient.get_all_tickers()
+
+    wallet_collection: Collection = db.wallet
+    wallet = wallet_collection.find({},{"_id": 0})
+
+    list_cur = list(wallet)
+
+    for index, x in enumerate(list_cur):
+        symbol = x['SYMBOL']
+        quantity = x['QUANTITY']
+        money = x['MONEY']
+        price = [d for d in coinsWithPrice if d['symbol'] in symbol][0]['price']
+
+        list_cur[index]['NET'] = float(price) * float(quantity) + float(money)
+
+    data = {"wallet": list_cur, "uptime": str(datetime.datetime.now() - startTime).split(".")[0]}
 
     return Response(data=data, content_type="application/json")
 

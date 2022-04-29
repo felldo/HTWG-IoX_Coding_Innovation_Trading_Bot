@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
+Django = "*"
 python-binance = "1.0.15"
 djangorestframework = "*"
 django-cors-headers = "*"
