@@ -68,6 +68,12 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
         timestamp_in_millis = int(
             (datetime.now() - timedelta(minutes=get_amount_of_data_from_interval(interval))).timestamp() * 1000)
         prefetchedData = client.get_historical_klines(symbol, interval, timestamp_in_millis)
+
+        #print(prefetchedData)
+
+        #for kline in prefetchedData:
+        #    macd.trade(kline[0], float(kline[1]), float(kline[4]))
+        #    print(len(macd.lastTwenty))
         # TODO:
     # start is required to initialise its internal loop
     twm.start()
