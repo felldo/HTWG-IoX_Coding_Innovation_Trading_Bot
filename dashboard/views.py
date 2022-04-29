@@ -88,8 +88,8 @@ def get_overview(request: rest_framework.request.Request):
         list_cur[index]['NET'] = float(price) * float(quantity) + float(money)
 
     data = {"wallet": list_cur, "uptime": str(datetime.datetime.now() - startTime).split(".")[0]}
-
-    return Response(data=data, content_type="application/json")
+    resp = {'Access-Control-Allow-Origin': '*'}
+    return Response(data=data, content_type="application/json", headers=resp)
 
 
 ### BINANCE API
