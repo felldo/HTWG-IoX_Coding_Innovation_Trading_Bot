@@ -11,7 +11,8 @@ import json
 # ----------------#----------------#----------------#----------------#----------------#----------------
 # MONGO DB
 # ----------------#----------------#----------------#----------------#----------------#----------------
-mongoClient = MongoClient('better-tickets.de:2379',
+mongoClient = MongoClient(#'better-tickets.de:2379',
+                            'mongodb:27017',
                           username='tb',
                           password=os.environ['MONGO_DB_PASSWORD'],
                           authSource='trading_bot',
