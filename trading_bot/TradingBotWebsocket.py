@@ -87,7 +87,7 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
         # print(msg)
         # print(event_time, "\t", msg)
         if algorithm == "BB":
-            print(msg)
+            #print(msg)
             check_trading_action(bb.trade(msg["k"]["t"], float(msg["k"]["o"]), float(msg["k"]["c"])), symbol,
                                  trading_bot_db, msg)
         elif algorithm == "MACD":
