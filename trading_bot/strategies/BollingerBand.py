@@ -6,10 +6,13 @@ from trading_bot.strategies.StrategyReturnType import *
 
 
 class BollingerBand:
-    # Empty deque to start with
-    lastTwenty = deque([])
+    def __init__(self):
+        # Empty deque to start with
+        self.lastTwenty = deque([])
+        self.old_time = 0
+
     # Set old_time to 0 at the beginning
-    old_time = 0
+
     #
     # Appends Element to end of Deque until it has a length of 20
     # If length of 20, Pop the first element and append the new one to the end

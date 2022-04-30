@@ -6,18 +6,21 @@ from trading_bot.strategies.StrategyReturnType import *
 
 
 class MACD:
-    # Create prev_row variable for saving the row of the last iteration
-    prev_row: Series
-    # Set intersection to 0 at the start
-    intersection = 0
-    # Set old time to 0 at the start
-    old_time = 0
+    def __init__(self):
+        # Create prev_row variable for saving the row of the last iteration
+        self.prev_row: Series
+        # Set intersection to 0 at the start
+        self.intersection = 0
+        # Set old time to 0 at the start
+        self.old_time = 0
+        #                                                       Open_Time , Close_Price, Bought/Sold Flag, Intersection Flag
+        self.close_price_list_pd: DataFrame = pd.DataFrame(columns=['open_time', 'close_price', 'bought/sold', 'intersection'])
+
     # Most Popular Combination of fast/slow length and signal values
     fast_length = 12
     slow_length = 26
     signal_line = 9
-    #                                                       Open_Time , Close_Price, Bought/Sold Flag, Intersection Flag
-    close_price_list_pd: DataFrame = pd.DataFrame(columns=['open_time', 'close_price', 'bought/sold', 'intersection'])
+
 
     # Returns current close_price_list
     def get_data(self):

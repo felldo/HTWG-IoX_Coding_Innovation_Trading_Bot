@@ -59,22 +59,19 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
     if algorithm == "BB":
         timestamp_in_millis = int(
             (datetime.now() - timedelta(minutes=get_amount_of_data_from_interval(interval) * 20)).timestamp() * 1000)
-        prefetchedData = client.get_historical_klines(symbol, interval, timestamp_in_millis)
+        prefetched_data = client.get_historical_klines(symbol, interval, timestamp_in_millis)
 
-        for kline in prefetchedData:
+        for kline in prefetched_data:
             bb.trade(kline[0], float(kline[1]), float(kline[4]))
             print(len(bb.lastTwenty))
     elif algorithm == "MACD":
         timestamp_in_millis = int(
             (datetime.now() - timedelta(minutes=get_amount_of_data_from_interval(interval))).timestamp() * 1000)
-        prefetchedData = client.get_historical_klines(symbol, interval, timestamp_in_millis)
+        prefetched_data = client.get_historical_klines(symbol, interval, timestamp_in_millis)
 
         #print(prefetchedData)
-
-        #for kline in prefetchedData:
-        #    macd.trade(kline[0], float(kline[1]), float(kline[4]))
-        #    print(len(macd.lastTwenty))
-        # TODO:
+        for kline in prefetched_data:
+            macd.trade(kline[0], float(kline[4]))
     # start is required to initialise its internal loop
     twm.start()
 
@@ -93,8 +90,7 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
             check_trading_action(bb.trade(msg["k"]["t"], float(msg["k"]["o"]), float(msg["k"]["c"])), symbol,
                                  trading_bot_db, msg)
         elif algorithm == "MACD":
-            check_trading_action(macd.trade(msg["k"]["E"], float(msg["k"]["c"])), symbol, trading_bot_db, msg)
-            # print("Replace with function")
+            check_trading_action(macd.trade(msg["k"]["t"], float(msg["k"]["c"])), symbol, trading_bot_db, msg)
 
     twm.start_kline_socket(callback=handle_socket_message, symbol=symbol, interval=interval)
 
