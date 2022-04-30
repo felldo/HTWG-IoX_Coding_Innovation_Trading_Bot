@@ -2,7 +2,8 @@
 import asyncio
 
 import binance
-from binance import ThreadedWebsocketManager, ThreadedDepthCacheManager, Client
+#from binance import ThreadedWebsocketManager, ThreadedDepthCacheManager, Client
+from python_binance import ThreadedWebsocketManager, ThreadedDepthCacheManager, Client
 import os
 
 from datetime import datetime, timedelta

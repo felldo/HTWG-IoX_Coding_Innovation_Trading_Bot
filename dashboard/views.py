@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from binance import Client
+#from binance import Client
+from python_binance import Client
 import rest_framework.request, os, threading, datetime
 import trading_bot.TradingBotWebsocket as tbsocket
 from pymongo import MongoClient
