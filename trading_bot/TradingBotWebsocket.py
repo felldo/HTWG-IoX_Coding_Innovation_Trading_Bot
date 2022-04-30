@@ -66,7 +66,7 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
             print(len(bb.lastTwenty))
     elif algorithm == "MACD":
         timestamp_in_millis = int(
-            (datetime.now() - timedelta(minutes=get_amount_of_data_from_interval(interval))).timestamp() * 1000)
+            (datetime.now() - timedelta(minutes=get_amount_of_data_from_interval(interval) * 100)).timestamp() * 1000)
         prefetched_data = client.get_historical_klines(symbol, interval, timestamp_in_millis)
 
         #print(prefetchedData)
