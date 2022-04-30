@@ -12,7 +12,7 @@ import json
 # MONGO DB
 # ----------------#----------------#----------------#----------------#----------------#----------------
 mongoClient = MongoClient(#'better-tickets.de:2379',
-                            'mongodb:27017',
+                            '192.168.10.50:10101',
                           username='tb',
                           password=os.environ['MONGO_DB_PASSWORD'],
                           authSource='trading_bot',
