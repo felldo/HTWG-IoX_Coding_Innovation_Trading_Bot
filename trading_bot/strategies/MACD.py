@@ -17,8 +17,8 @@ class MACD:
         self.close_price_list_pd: DataFrame = pd.DataFrame(columns=['open_time', 'close_price', 'bought/sold', 'intersection'])
 
     # Most Popular Combination of fast/slow length and signal values
-    fast_length = 12
-    slow_length = 26
+    fast_length = 26
+    slow_length = 12
     signal_line = 9
 
 
