@@ -41,7 +41,7 @@ class BollingerBand:
             # Average of the last twenty calls we did
             mean = np.mean(self.lastTwenty)
             # Get the upper and lower band of the BollingerBand strategy
-            upper_band, lower_band = self.bollinger_band(mean, 3)
+            upper_band, lower_band = self.bollinger_band(mean, 2)
             if lower_band > closed_price:
                 # Return Buy Flag
                 return StrategyReturnType.BUY

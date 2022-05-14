@@ -3,6 +3,8 @@ import asyncio
 
 import binance
 #from binance import ThreadedWebsocketManager, ThreadedDepthCacheManager, Client
+import pymongo
+
 from python_binance import ThreadedWebsocketManager, ThreadedDepthCacheManager, Client
 import os
 
@@ -14,6 +16,7 @@ from trading_bot.strategies.BollingerBand import BollingerBand
 from trading_bot.strategies.MACD import MACD
 from trading_bot.strategies.StrategyReturnType import StrategyReturnType
 
+lastBuyPrices = {}
 
 def get_amount_of_data_from_interval(interval: str) -> int:
     if interval == "1m":
@@ -51,6 +54,17 @@ def get_amount_of_data_from_interval(interval: str) -> int:
 def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client, interval: str,
                  trading_bot_db: database.Database):
     print('Start Thread for: ', symbol)
+
+    trades_collection: Collection = trading_bot_db.trades
+
+    lastBuyPriceLocal = trades_collection.find({'ACTION': 'BUY', "SYMBOL": symbol}, sort=[('_id', -1)], limit=1)  # .sort("_id",1).limit(1)
+
+    if lastBuyPriceLocal is None:
+        print("NO LAST BUY PRICE IN DB")
+    else:
+        for x in lastBuyPriceLocal:
+            lastBuyPrices[symbol] = x.get("PRICE")
+            print("LAST BUY PRICE: ", lastBuyPrices[symbol])
 
     twm = ThreadedWebsocketManager(api_key=os.environ['BINANCE_API_KEY'], api_secret=os.environ['BINANCE_SECRET'])
 
@@ -102,12 +116,11 @@ def build_thread(symbol: str, stop_event, algorithm: str, client: binance.Client
 def check_trading_action(trade_action: StrategyReturnType, coin_name: str, trading_bot_db: database.Database, msg):
     if trade_action == StrategyReturnType.SELL:
         sell(coin_name, trading_bot_db, msg)
+        stopLoss(coin_name, trading_bot_db, msg)
     elif trade_action == StrategyReturnType.BUY:
         buy(coin_name, trading_bot_db, msg)
-
-
-lastBuyPrices = {}
-
+    elif trade_action == StrategyReturnType.HOLD:
+        stopLoss(coin_name, trading_bot_db, msg)
 
 def buy(coin_name: str, trading_bot_db: database.Database, msg):
     trades_collection: Collection = trading_bot_db.trades
@@ -121,7 +134,9 @@ def buy(coin_name: str, trading_bot_db: database.Database, msg):
     if coin_wallet is None:
         wallet_collection.insert_one({"SYMBOL": coin_name, "QUANTITY": quantity, "MONEY": 100000})
         money = 100000
+        print("BUY: ", coin_name, " WALLET IS NONE")
     else:
+        print("BUY: ", coin_name, " WALLET FOUND")
         money = coin_wallet.get("MONEY")
         quantity = coin_wallet.get("QUANTITY")
 
@@ -138,7 +153,7 @@ def buy(coin_name: str, trading_bot_db: database.Database, msg):
         quantity += 1
         lastBuyPrices[coin_name] = close_price
 
-    updateCollections(coin_name, "BUY", msg, quantity, quantity, money, trades_collection, wallet_collection)
+    updateCollections(coin_name, "BUY", msg, quantity, quantity, money, trades_collection, wallet_collection, close_price)
 
 
 def sell(coin_name: str, trading_bot_db: database.Database, msg):
@@ -152,35 +167,65 @@ def sell(coin_name: str, trading_bot_db: database.Database, msg):
     # if coin is not in our wallet => create coin and give it 100k for trading
     if coin_wallet is None:
         wallet_collection.insert_one({"SYMBOL": coin_name, "QUANTITY": quantity, "MONEY": 100000})
+        print("SELL: ", coin_name, " WALLET IS NONE")
         return
     else:
+        print("SELL: ", coin_name, " WALLET FOUND")
         money = coin_wallet.get("MONEY")
         quantity = coin_wallet.get("QUANTITY")
 
     close_price = float(msg["k"]["c"])
     last_buy_price = lastBuyPrices[coin_name]
 
-    if (quantity > 0 and close_price > last_buy_price) or (quantity > 0 and (last_buy_price * 0.98) > close_price):
+    if quantity > 0 and close_price > last_buy_price:
         print("SELL " + coin_name)
-
-        if (last_buy_price * 0.98) > close_price:
-            print("SOLD BECAUSE OF STOP LOSS")
 
         coins = quantity
         while coins != 0:
             money = money + close_price
             coins -= 1
 
-        updateCollections(coin_name, "SELL", msg, quantity, 0, money, trades_collection, wallet_collection)
+        updateCollections(coin_name, "SELL", msg, quantity, 0, money, trades_collection, wallet_collection, close_price)
 
+def stopLoss(coin_name: str, trading_bot_db: database.Database, msg):
+    trades_collection: Collection = trading_bot_db.trades
+    wallet_collection: Collection = trading_bot_db.wallet
 
-def updateCollections(coin_name, action, event, quantity, wallet_quantity, money, trades_collection, wallet_collection):
+    coin_wallet = wallet_collection.find_one({"SYMBOL": coin_name})
+
+    money = 0
+    quantity = 0
+    # if coin is not in our wallet => create coin and give it 100k for trading
+    if coin_wallet is None:
+        wallet_collection.insert_one({"SYMBOL": coin_name, "QUANTITY": quantity, "MONEY": 100000})
+        print("STOP LOSS: ", coin_name, " WALLET IS NONE")
+        return
+    else:
+        print("STOP LOSS: ", coin_name, " WALLET FOUND")
+        money = coin_wallet.get("MONEY")
+        quantity = coin_wallet.get("QUANTITY")
+
+    close_price = float(msg["k"]["c"])
+    last_buy_price = lastBuyPrices[coin_name]
+
+    if quantity > 0 and (last_buy_price * 0.98) > close_price:
+        print("SOLD BECAUSE OF STOP LOSS")
+
+        coins = quantity
+        while coins != 0:
+            money = money + close_price
+            coins -= 1
+
+        updateCollections(coin_name, "SELL", msg, quantity, 0, money, trades_collection, wallet_collection, close_price)
+
+def updateCollections(coin_name, action, event, quantity, wallet_quantity, money, trades_collection, wallet_collection, price):
     # insert new trade
     trades_collection.insert_one({
         "SYMBOL": coin_name,
         "ACTION": action,
         "EVENT": event,
         "QUANTITY": quantity,
+        "PRICE": price,
     })
 
     # update our wallet
